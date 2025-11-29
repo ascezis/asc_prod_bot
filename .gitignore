@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.env
+*.venv
+venv/
+env/
+
+# Logs
+*.log
+
+# Database files
+*.db
+*.sqlite3
+
+# Bot secrets
+app/config.py
+
+# AI key (если хранится где-то)
+*.key
+*.secret
+
+# IDE
+.vscode/
+.idea/
+
+# Node / Frontend
+node_modules/
+dist/
