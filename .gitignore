@@ -29,3 +29,17 @@ app/config.py
 # Node / Frontend
 node_modules/
 dist/
+
+# Секретные файлы
+keys
+hosts
+context.txt
+
+# Виртуальное окружение
+venv/
+.env
+
+# Логи, кэш и node_modules
+*.log
+__pycache__/
+node_modules/
