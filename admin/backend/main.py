@@ -9,7 +9,7 @@ PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 
-from admin.backend.routers import projects, clients, statistics, auth
+from admin.backend.routers import projects, clients, statistics, auth, users
 from app.database.connection import init_db
 
 app = FastAPI(title="ASC Prod Bot API")
@@ -32,6 +32,11 @@ origins = [
     "http://127.0.0.1:5174",
     "http://localhost:3000",
     "http://127.0.0.1:3000",
+    "http://localhost:8080",  # Web App локальный сервер
+    "https://*.ngrok.io",  # ngrok туннели (для тестирования)
+    "https://*.ngrok-free.app",  # ngrok новые домены
+    "https://*.ngrok-free.dev",  # ngrok новые домены
+    "https://overfemininely-subministrant-jenell.ngrok-free.dev",  # Ваш ngrok URL
 ]
 
 app.add_middleware(
@@ -45,6 +50,7 @@ app.add_middleware(
 
 # Подключаем роутеры
 app.include_router(auth.router)  # Аутентификация (публичный доступ)
+app.include_router(users.router)  # Управление пользователями
 app.include_router(clients.router)
 app.include_router(projects.router)
 app.include_router(statistics.router)

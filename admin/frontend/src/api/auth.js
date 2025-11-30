@@ -53,3 +53,14 @@ export const getCurrentUser = async () => {
   return res.data;
 };
 
+// Регистрация нового пользователя (публичная)
+export const register = async (username, email, password) => {
+  const res = await axios.post(`${API_URL}/auth/register`, {
+    username,
+    email,
+    password,
+  });
+
+  return res.data;
+};
+

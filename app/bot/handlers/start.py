@@ -1,11 +1,12 @@
 from aiogram import Router, F
-from aiogram.types import Message
+from aiogram.types import Message, CallbackQuery
 from aiogram.filters import CommandStart, Command  # Добавили Command
 from aiogram.fsm.context import FSMContext
 
 from app.bot.keyboards.qualification import get_project_type_keyboard  # Абсолютный импорт
 from app.bot.states import ProjectStates
 from app.services.ai_client import AIClient
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 router = Router()
 
@@ -17,11 +18,39 @@ async def cmd_start(message: Message, state: FSMContext):
         "• Монтаж YouTube-лонгридов, подкастов, образовательного контента\n"  
         "• Глубокая обработка звука (очистка, выправка, усиление, улучшение)\n"
         "• Графика и моушн-дизайн\n\n"
-        "Позвольте, уточнить технические моменты, чтобы мы могли приступить к работе."
+        "Выберите способ создания заявки:"
     )
     
-    await message.answer(welcome_text)
-    await message.answer(
+    # Кнопки для выбора способа создания заявки
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [
+            InlineKeyboardButton(
+                text="📱 Создать через Web App",
+                web_app={"url": "https://overfemininely-subministrant-jenell.ngrok-free.dev/index.html"}
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="💬 Создать в чате",
+                callback_data="create_in_chat"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="📊 Мои заявки",
+                web_app={"url": "https://overfemininely-subministrant-jenell.ngrok-free.dev/index.html"}
+            )
+        ]
+    ])
+    
+    await message.answer(welcome_text, reply_markup=keyboard)
+
+
+@router.callback_query(F.data == "create_in_chat")
+async def create_in_chat(callback: CallbackQuery, state: FSMContext):
+    """Создание заявки в чате (старый способ)"""
+    await callback.answer()
+    await callback.message.answer(
         "1. Тип проекта:",
         reply_markup=get_project_type_keyboard()
     )

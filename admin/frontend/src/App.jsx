@@ -5,7 +5,9 @@ import Sidebar from "./components/Sidebar";
 import Dashboard from "./pages/Dashboard";
 import Clients from "./pages/Clients";
 import Projects from "./pages/Projects";
+import Users from "./pages/Users";
 import Login from "./pages/Login";
+import Register from "./pages/Register";
 import { getToken, getUser } from "./api/auth";
 
 const MotionBox = motion(Box);
@@ -14,12 +16,19 @@ function App() {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [showRegister, setShowRegister] = useState(false);
   const { colorMode } = useColorMode();
 
   useEffect(() => {
     // Проверяем наличие токена при загрузке
     const token = getToken();
     const user = getUser();
+    
+    // Проверяем, нужно ли показать регистрацию
+    const path = window.location.pathname;
+    if (path === "/register" || path.includes("register")) {
+      setShowRegister(true);
+    }
     
     if (token && user) {
       setIsAuthenticated(true);
@@ -47,9 +56,25 @@ function App() {
     return null; // Можно добавить спиннер
   }
 
-  // Если не авторизован, показываем страницу входа
+  // Если не авторизован, показываем страницу входа или регистрации
   if (!isAuthenticated) {
-    return <Login onLogin={() => setIsAuthenticated(true)} />;
+    if (showRegister) {
+      return (
+        <Register
+          onRegister={() => {
+            setShowRegister(false);
+            setIsAuthenticated(false);
+            window.location.href = "/";
+          }}
+        />
+      );
+    }
+    return (
+      <Login
+        onLogin={() => setIsAuthenticated(true)}
+        onShowRegister={() => setShowRegister(true)}
+      />
+    );
   }
 
   const renderContent = () => {
@@ -60,6 +85,8 @@ function App() {
         return <Clients />;
       case "projects":
         return <Projects />;
+      case "users":
+        return <Users />;
       default:
         return <Dashboard />;
     }

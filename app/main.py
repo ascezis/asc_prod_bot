@@ -8,6 +8,7 @@ from app.bot.handlers.start import router as start_router
 from app.bot.handlers.qualification import router as qualification_router
 from app.bot.handlers.technical import router as technical_router
 from app.bot.handlers.final import router as final_router
+from app.bot.handlers.webapp import router as webapp_router
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -23,6 +24,7 @@ async def main():
     
     # Регистрация роутеров
     dp.include_router(start_router)
+    dp.include_router(webapp_router)  # Web App должен быть раньше, чтобы перехватывать web_app_data
     dp.include_router(qualification_router)
     dp.include_router(technical_router)
     dp.include_router(final_router)

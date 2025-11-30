@@ -12,10 +12,11 @@ import {
   AlertIcon,
   Container,
   useColorModeValue,
+  Link,
 } from "@chakra-ui/react";
 import { login, getUser } from "../api/auth";
 
-function Login({ onLogin }) {
+function Login({ onLogin, onShowRegister }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -106,7 +107,20 @@ function Login({ onLogin }) {
             </form>
 
             <Text fontSize="sm" color="gray.500" textAlign="center">
-              Используйте учетные данные владельца для входа
+              Нет аккаунта?{" "}
+              <Link
+                color="blue.500"
+                onClick={() => {
+                  if (onShowRegister) {
+                    onShowRegister();
+                  } else {
+                    window.location.href = "/register";
+                  }
+                }}
+                style={{ cursor: "pointer" }}
+              >
+                Зарегистрироваться
+              </Link>
             </Text>
           </VStack>
         </Box>

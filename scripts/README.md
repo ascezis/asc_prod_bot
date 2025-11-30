@@ -4,10 +4,15 @@
 
 - **[create_owner_simple.py](./create_owner_simple.py)** - Создание первого пользователя-владельца (упрощенная версия, рекомендуется)
 - **[create_owner.py](./create_owner.py)** - Создание первого пользователя-владельца (полная версия)
+- **[create_user.py](./create_user.py)** - Создание пользователей с любой ролью (user, admin, owner)
 
 ### Использование:
 ```bash
+# Создать первого владельца
 python scripts/create_owner_simple.py
+
+# Создать пользователя с любой ролью
+python scripts/create_user.py
 ```
 
 ## Тестирование
@@ -31,4 +36,3 @@ python scripts/test_login_simple.py
 ---
 
 **Примечание:** Все скрипты должны запускаться из корня проекта.
-

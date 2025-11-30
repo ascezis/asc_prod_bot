@@ -41,7 +41,7 @@ class UserResponse(BaseModel):
     id: int
     username: str
     email: str
-    role: UserRole
+    role: str  # Изменено на str, так как в БД хранится строка
     telegram_id: Optional[int] = None
     is_active: bool
     
@@ -83,15 +83,22 @@ async def login(
     }
 
 
+class UserRegister(BaseModel):
+    """Схема публичной регистрации (только для роли User)"""
+    username: str
+    email: EmailStr
+    password: str
+
+
 @router.post("/register", response_model=UserResponse)
-async def register(
-    user_data: UserCreate,
-    db: AsyncSession = Depends(get_db_connection),
-    current_user: User = Depends(require_owner())  # Только Owner может создавать пользователей
+async def register_public(
+    user_data: UserRegister,
+    db: AsyncSession = Depends(get_db_connection)
 ):
-    """Регистрация нового пользователя (только для Owner)"""
-    # Проверяем, существует ли пользователь
+    """Публичная регистрация нового пользователя (только роль User)"""
     from sqlalchemy.future import select
+    
+    # Проверяем, существует ли пользователь
     result = await db.execute(select(User).where(User.username == user_data.username))
     if result.scalars().first():
         raise HTTPException(
@@ -106,7 +113,54 @@ async def register(
             detail="Email already registered"
         )
     
-    # Создаем пользователя
+    # Создаем пользователя только с ролью User
+    user = User(
+        username=user_data.username,
+        email=user_data.email,
+        hashed_password=get_password_hash(user_data.password),
+        role=UserRole.USER.value,  # Всегда User для публичной регистрации
+        is_active=True
+    )
+    
+    db.add(user)
+    await db.commit()
+    await db.refresh(user)
+    
+    # Возвращаем пользователя с правильным форматом
+    return UserResponse(
+        id=user.id,
+        username=user.username,
+        email=user.email,
+        role=user.role,  # Уже строка
+        telegram_id=user.telegram_id,
+        is_active=user.is_active
+    )
+
+
+@router.post("/register/admin", response_model=UserResponse)
+async def register_admin(
+    user_data: UserCreate,
+    db: AsyncSession = Depends(get_db_connection),
+    current_user: User = Depends(require_owner())  # Только Owner может создавать пользователей с любой ролью
+):
+    """Регистрация нового пользователя с любой ролью (только для Owner)"""
+    from sqlalchemy.future import select
+    
+    # Проверяем, существует ли пользователь
+    result = await db.execute(select(User).where(User.username == user_data.username))
+    if result.scalars().first():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Username already registered"
+        )
+    
+    result = await db.execute(select(User).where(User.email == user_data.email))
+    if result.scalars().first():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email already registered"
+        )
+    
     # Проверяем, что роль валидна
     valid_roles = [UserRole.USER.value, UserRole.ADMIN.value, UserRole.OWNER.value]
     if user_data.role not in valid_roles:
@@ -119,7 +173,7 @@ async def register(
         username=user_data.username,
         email=user_data.email,
         hashed_password=get_password_hash(user_data.password),
-        role=user_data.role,  # Уже строка
+        role=user_data.role,
         is_active=True
     )
     
@@ -127,7 +181,15 @@ async def register(
     await db.commit()
     await db.refresh(user)
     
-    return user
+    # Возвращаем пользователя с правильным форматом
+    return UserResponse(
+        id=user.id,
+        username=user.username,
+        email=user.email,
+        role=user.role,  # Уже строка
+        telegram_id=user.telegram_id,
+        is_active=user.is_active
+    )
 
 
 @router.get("/me", response_model=UserResponse)
@@ -135,5 +197,12 @@ async def get_current_user_info(
     current_user: User = Depends(get_current_active_user)
 ):
     """Получить информацию о текущем пользователе"""
-    return current_user
+    return UserResponse(
+        id=current_user.id,
+        username=current_user.username,
+        email=current_user.email,
+        role=current_user.role,  # Уже строка
+        telegram_id=current_user.telegram_id,
+        is_active=current_user.is_active
+    )
 

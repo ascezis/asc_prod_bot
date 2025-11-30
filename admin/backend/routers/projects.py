@@ -65,6 +65,51 @@ class ProjectResponse(BaseModel):
 # Роуты
 # -----------------------------
 
+@router.get("/webapp", response_model=List[ProjectResponse])
+async def list_projects_webapp(
+    telegram_id: int = Query(..., description="Telegram ID пользователя"),
+    db: AsyncSession = Depends(get_db_connection)
+):
+    """
+    Список проектов для Web App (по telegram_id, без авторизации)
+    """
+    # Находим клиента по telegram_id
+    result = await db.execute(select(Client).where(Client.telegram_id == telegram_id))
+    client = result.scalars().first()
+    
+    if not client:
+        return []
+    
+    # Получаем проекты клиента
+    result = await db.execute(
+        select(Project)
+        .where(Project.client_id == client.id)
+        .order_by(Project.created_at.desc())
+    )
+    projects = result.scalars().all()
+    
+    return [
+        ProjectResponse(
+            id=p.id,
+            client_id=p.client_id,
+            project_type=p.project_type,
+            duration_raw=p.duration_raw,
+            duration_final=p.duration_final,
+            services=p.services or [],
+            deadline=p.deadline,
+            budget=p.budget,
+            source_links=p.source_links,
+            style_examples=p.style_examples,
+            additional_notes=p.additional_notes,
+            status=p.status,
+            created_at=p.created_at.isoformat() if p.created_at else None,
+            updated_at=p.updated_at.isoformat() if p.updated_at else None,
+            client_name=client.full_name or client.username or f"User {client.telegram_id}"
+        )
+        for p in projects
+    ]
+
+
 @router.get("/", response_model=List[ProjectResponse])
 async def list_projects(
     client_id: Optional[int] = Query(None),

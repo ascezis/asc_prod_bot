@@ -24,6 +24,8 @@
 
 - **[NEXT_STEPS.md](./NEXT_STEPS.md)** - Следующие шаги после создания владельца
 - **[QUICK_TEST.md](./QUICK_TEST.md)** - Быстрый тест системы аутентификации
+- **[CREATE_USERS.md](./CREATE_USERS.md)** - Как создать пользователей (Admin, User)
+- **[USER_REGISTRATION.md](./USER_REGISTRATION.md)** - Регистрация и управление пользователями
 
 ## 📡 API
 

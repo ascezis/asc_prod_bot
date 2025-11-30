@@ -41,6 +41,11 @@ function Sidebar({ activeTab, setActiveTab }) {
     { id: "projects", label: "📁 Projects" },
   ];
 
+  // Добавляем пункт "Пользователи" только для Admin и Owner
+  if (user && (user.role === "admin" || user.role === "owner")) {
+    menuItems.push({ id: "users", label: "👤 Пользователи" });
+  }
+
   return (
     <MotionBox
       w="250px"
