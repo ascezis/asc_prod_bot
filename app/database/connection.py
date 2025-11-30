@@ -34,7 +34,14 @@ async def get_db_connection() -> AsyncSession:
 async def init_db():
     """Инициализация базы данных"""
     try:
-        from app.database.models import Base  # импортируем модели здесь, чтобы избежать циклических импортов
+        # Импортируем Base и все модели, чтобы они зарегистрировались в metadata
+        from app.database.models import (
+            Base,
+            User,  # Важно: импортируем модели, чтобы они были в metadata
+            Client,
+            Project,
+            AIAnalysis
+        )
 
         async with engine.begin() as conn:
             # Создаем все таблицы

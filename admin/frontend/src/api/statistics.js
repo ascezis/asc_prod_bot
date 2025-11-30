@@ -1,9 +1,7 @@
-import axios from "axios";
-
-const API_URL = "http://localhost:8000";
+import apiClient from "./axiosConfig";
 
 export const getStatistics = async () => {
-  const res = await axios.get(`${API_URL}/statistics/`);
+  const res = await apiClient.get("/statistics/");
   return res.data;
 };
 

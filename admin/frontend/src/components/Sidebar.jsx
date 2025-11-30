@@ -7,14 +7,22 @@ import {
   IconButton,
   Flex,
   useColorMode,
+  Text,
 } from "@chakra-ui/react";
 import { SunIcon, MoonIcon } from "@chakra-ui/icons";
 import { motion, AnimatePresence } from "framer-motion";
+import { getUser, logout } from "../api/auth";
 
 const MotionBox = motion(Box);
 
 function Sidebar({ activeTab, setActiveTab }) {
   const { colorMode, toggleColorMode } = useColorMode();
+  const user = getUser();
+
+  const handleLogout = () => {
+    logout();
+    window.location.reload();
+  };
 
   const colors = {
     light: {
@@ -40,6 +48,9 @@ function Sidebar({ activeTab, setActiveTab }) {
       color="white"
       p={6}
       shadow="lg"
+      display="flex"
+      flexDirection="column"
+      minH="100vh"
       animate={{ backgroundColor: currentColors.sidebarBg }}
       transition={{ duration: 0.5 }}
     >
@@ -88,7 +99,7 @@ function Sidebar({ activeTab, setActiveTab }) {
           </Box>
         </IconButton>
       </Flex>
-      <VStack align="start" spacing={4}>
+      <VStack align="start" spacing={4} flex="1">
         {menuItems.map((item) => (
           <Button
             key={item.id}
@@ -103,6 +114,23 @@ function Sidebar({ activeTab, setActiveTab }) {
           </Button>
         ))}
       </VStack>
+      
+      <Box mt="auto" pt={4} borderTop="1px solid" borderColor="whiteAlpha.300">
+        {user && (
+          <Text fontSize="sm" mb={2} opacity={0.9}>
+            {user.username} ({user.role})
+          </Text>
+        )}
+        <Button
+          variant="ghost"
+          colorScheme="whiteAlpha"
+          w="100%"
+          size="sm"
+          onClick={handleLogout}
+        >
+          Выйти
+        </Button>
+      </Box>
     </MotionBox>
   );
 }

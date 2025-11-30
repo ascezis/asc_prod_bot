@@ -1,45 +1,65 @@
 # Python
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
-*.env
-*.venv
+*.py[cod]
+*$py.class
+*.so
+.Python
 venv/
 env/
+ENV/
+.venv
 
-# Logs
-*.log
-
-# Database files
-*.db
-*.sqlite3
-
-# Bot secrets
-app/config.py
-
-# AI key (если хранится где-то)
-*.key
-*.secret
+# Environment variables
+.env
+.env.local
+*.env
 
 # IDE
 .vscode/
 .idea/
+*.swp
+*.swo
+*~
 
-# Node / Frontend
-node_modules/
-dist/
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
 
-# Секретные файлы
-keys
-hosts
-context.txt
-
-# Виртуальное окружение
-venv/
-.env
-
-# Логи, кэш и node_modules
+# Logs
 *.log
-__pycache__/
+logs/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Config (секретные данные)
+app/config.py
+
+# Node
 node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build
+dist/
+build/
+*.egg-info/
+
+# Temporary files
+*.tmp
+*.temp
+killer.txt
+tatus
+tatus --short
+context.txt
+tree
+hosts
+keys
+
+# Documentation (опционально, если хотите исключить некоторые файлы)
+# docs/killer.txt
+# docs/tatus*

@@ -3,10 +3,14 @@ import os
 import asyncio
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from admin.backend.routers import projects, clients, statistics
+
+# Добавляем корень проекта в PYTHONPATH для корректных импортов
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
+
+from admin.backend.routers import projects, clients, statistics, auth
 from app.database.connection import init_db
-# Чтобы Python видел верхний уровень проекта
-sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 
 app = FastAPI(title="ASC Prod Bot API")
 
@@ -40,6 +44,7 @@ app.add_middleware(
 )
 
 # Подключаем роутеры
+app.include_router(auth.router)  # Аутентификация (публичный доступ)
 app.include_router(clients.router)
 app.include_router(projects.router)
 app.include_router(statistics.router)

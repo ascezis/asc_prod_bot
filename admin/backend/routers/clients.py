@@ -5,7 +5,8 @@ from sqlalchemy.future import select
 from sqlalchemy import or_, func
 from typing import List, Optional
 from app.database.connection import get_db_connection
-from app.database.models import Client, Project
+from app.database.models import Client, Project, User
+from admin.backend.auth import require_admin, require_owner, get_current_active_user
 from pydantic import BaseModel
 from datetime import datetime
 
@@ -45,7 +46,8 @@ async def list_clients(
     telegram_id: Optional[int] = Query(None, description="Фильтр по telegram_id"),
     limit: int = Query(100, ge=1, le=1000, description="Лимит записей"),
     offset: int = Query(0, ge=0, description="Смещение для пагинации"),
-    db: AsyncSession = Depends(get_db_connection)
+    db: AsyncSession = Depends(get_db_connection),
+    current_user: User = Depends(get_current_active_user)  # Требуется авторизация
 ):
     """
     Список клиентов с поиском и фильтрацией
@@ -132,7 +134,8 @@ async def get_client(
 @router.post("/", response_model=ClientResponse)
 async def create_client(
     client_data: ClientCreate,
-    db: AsyncSession = Depends(get_db_connection)
+    db: AsyncSession = Depends(get_db_connection),
+    current_user: User = Depends(require_admin())  # Только Admin и Owner
 ):
     """
     Создание нового клиента
@@ -166,7 +169,8 @@ async def create_client(
 async def update_client(
     client_id: int,
     client_data: ClientUpdate,
-    db: AsyncSession = Depends(get_db_connection)
+    db: AsyncSession = Depends(get_db_connection),
+    current_user: User = Depends(require_admin())  # Только Admin и Owner
 ):
     """
     Обновление клиента
@@ -213,7 +217,8 @@ async def update_client(
 @router.delete("/{client_id}")
 async def delete_client(
     client_id: int,
-    db: AsyncSession = Depends(get_db_connection)
+    db: AsyncSession = Depends(get_db_connection),
+    current_user: User = Depends(require_owner())  # Только Owner
 ):
     """
     Удаление клиента

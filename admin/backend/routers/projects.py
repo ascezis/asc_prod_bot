@@ -6,7 +6,8 @@ from sqlalchemy import or_
 from typing import List, Optional
 from datetime import datetime
 from app.database.connection import get_db_connection
-from app.database.models import Project, Client, AIAnalysis
+from app.database.models import Project, Client, AIAnalysis, User
+from admin.backend.auth import require_admin, require_owner, get_current_active_user
 from admin.backend.crud import get_projects, get_clients
 from pydantic import BaseModel
 
@@ -71,7 +72,8 @@ async def list_projects(
     search: Optional[str] = Query(None),
     limit: int = Query(100, ge=1, le=1000),
     offset: int = Query(0, ge=0),
-    db: AsyncSession = Depends(get_db_connection)
+    db: AsyncSession = Depends(get_db_connection),
+    current_user: User = Depends(get_current_active_user)  # Требуется авторизация
 ):
     """
     Список проектов. Можно фильтровать по client_id и статусу.
@@ -160,7 +162,11 @@ async def get_project(project_id: int, db: AsyncSession = Depends(get_db_connect
 
 
 @router.post("/", response_model=ProjectResponse)
-async def create_project(project_data: ProjectCreate, db: AsyncSession = Depends(get_db_connection)):
+async def create_project(
+    project_data: ProjectCreate, 
+    db: AsyncSession = Depends(get_db_connection),
+    current_user: User = Depends(require_admin())  # Только Admin и Owner
+):
     """
     Создание новой заявки
     """
@@ -193,7 +199,12 @@ async def create_project(project_data: ProjectCreate, db: AsyncSession = Depends
 
 
 @router.put("/{project_id}", response_model=ProjectResponse)
-async def update_project(project_id: int, project_data: ProjectUpdate, db: AsyncSession = Depends(get_db_connection)):
+async def update_project(
+    project_id: int, 
+    project_data: ProjectUpdate, 
+    db: AsyncSession = Depends(get_db_connection),
+    current_user: User = Depends(require_admin())  # Только Admin и Owner
+):
     """
     Обновление заявки
     """
@@ -231,7 +242,11 @@ async def update_project(project_id: int, project_data: ProjectUpdate, db: Async
 
 
 @router.delete("/{project_id}")
-async def delete_project(project_id: int, db: AsyncSession = Depends(get_db_connection)):
+async def delete_project(
+    project_id: int, 
+    db: AsyncSession = Depends(get_db_connection),
+    current_user: User = Depends(require_owner())  # Только Owner
+):
     """
     Удаление заявки (с удалением связанных AI анализов)
     """

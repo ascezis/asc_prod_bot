@@ -1,5 +1,8 @@
-<<<<<<< HEAD
 # ASC Prod Bot
+
+> 📚 **Документация:** Вся документация находится в папке [`docs/`](./docs/).  
+> 🔧 **Скрипты:** Вспомогательные скрипты в папке [`scripts/`](./scripts/).  
+> 📋 **SQL:** SQL скрипты в папке [`sql/`](./sql/).
 
 Telegram-бот для приема заявок на видеомонтаж с админ-панелью и AI-анализом заявок.
 
@@ -54,6 +57,9 @@ DB_NAME=video_editor_bot
 # OpenRouter AI Configuration
 OPENROUTER_API_KEY=your_openrouter_api_key_here
 OPENROUTER_BASE_URL=https://openrouter.ai/api/v1/chat/completions
+
+# JWT Secret Key (для аутентификации)
+JWT_SECRET_KEY=your-very-secret-key-minimum-32-characters
 ```
 
 **Или** создайте файл `app/config.py` на основе `app/config.example.py` и заполните значениями.
@@ -77,7 +83,15 @@ GRANT ALL PRIVILEGES ON DATABASE video_editor_bot TO video_user;
 python -m app.database.connection
 ```
 
-### 4. Установка Frontend зависимостей
+### 4. Создание первого пользователя-владельца
+
+```bash
+python scripts/create_owner_simple.py
+```
+
+Введите username, email и password. Будет создан пользователь с ролью **Owner**.
+
+### 5. Установка Frontend зависимостей
 
 **Для React админ-панели:**
 ```bash
@@ -93,7 +107,7 @@ npm install
 cd ..
 ```
 
-### 5. Запуск проекта
+### 6. Запуск проекта
 
 #### Вариант 1: Запуск через Electron GUI (рекомендуется для Windows)
 
@@ -127,8 +141,7 @@ python run.py
 
 **Backend API:**
 ```bash
-cd admin/backend
-uvicorn main:app --reload --port 8000
+python -m uvicorn admin.backend.main:app --reload --port 8000
 ```
 
 **Frontend:**
@@ -161,13 +174,18 @@ asc_prod_bot/
 ├── admin/
 │   ├── backend/           # FastAPI backend
 │   │   ├── routers/       # API роуты
-│   │   ├── models.py      # Реэкспорт моделей
+│   │   ├── auth.py       # Аутентификация
 │   │   └── main.py        # FastAPI приложение
 │   └── frontend/          # React админ-панель
 │       └── src/
+├── docs/                  # 📚 Документация
+├── scripts/               # 🔧 Вспомогательные скрипты
+├── sql/                   # 📋 SQL скрипты
 ├── run.py                 # Менеджер процессов
 └── requirements.txt       # Python зависимости
 ```
+
+Подробнее: [`PROJECT_STRUCTURE.md`](./PROJECT_STRUCTURE.md)
 
 ## 🔧 Настройка
 
@@ -178,20 +196,28 @@ asc_prod_bot/
 ### База данных
 
 Модели БД находятся в `app/database/models.py`:
+- `User` - пользователи системы (для админ-панели)
 - `Client` - клиенты бота
 - `Project` - заявки на проекты
 - `AIAnalysis` - результаты AI-анализа
 
 ### API Endpoints
 
+- `POST /auth/login` - вход в систему
+- `GET /auth/me` - информация о текущем пользователе
 - `GET /clients` - список клиентов
 - `GET /projects` - список проектов
 - `GET /projects/{id}` - детали проекта
 - `POST /projects` - создание проекта
 - `PUT /projects/{id}` - обновление проекта
 - `DELETE /projects/{id}` - удаление проекта
+- `GET /statistics` - статистика
 
 API документация доступна по адресу: `http://localhost:8000/docs`
+
+## 🔐 Аутентификация
+
+Система использует JWT токены для защиты API. Подробнее: [`docs/AUTHENTICATION_GUIDE.md`](./docs/AUTHENTICATION_GUIDE.md)
 
 ## 🐛 Решение проблем
 
@@ -212,6 +238,10 @@ API документация доступна по адресу: `http://localho
 - Проверьте `BOT_TOKEN` в конфигурации
 - Убедитесь, что бот запущен: проверьте логи
 
+### Ошибки 401 (Unauthorized) в frontend
+- Убедитесь, что вы вошли в систему через страницу входа
+- Проверьте, что токен сохранен в localStorage
+
 ## 📝 Разработка
 
 ### Добавление новых обработчиков бота
@@ -225,153 +255,3 @@ API документация доступна по адресу: `http://localho
 ## 📄 Лицензия
 
 ISC
-=======
-# Video Editor Bot
-
- **Полностью рабочий бот для автоматизации обработки заявок на видеомонтаж с AI-анализом и админкой**
-
----
-
-## Содержание
-
-- [Описание](#описание)
-- [Структура проекта](#структура-проекта)
-- [Технологии](#технологии)
-- [Установка](#установка)
-- [Конфигурация](#конфигурация)
-- [Запуск](#запуск)
-- [Рабочий процесс](#рабочий-процесс)
-- [Безопасность](#безопасность)
-
----
-
-## Описание
-
-Бот позволяет:
-
-- Принимать заявки клиентов на видеомонтаж через Telegram;
-- Производить **AI-анализ** заявки: оценка реалистичности бюджета, сроки, риски, рекомендации;
-- Уведомлять администратора;
-- Вести базу клиентов и проектов;
-- Предоставляет админку для управления проектами (Frontend + Backend).
-
----
-
-## Структура проекта
-
-.
-├─ app/
-│ ├─ bot/ # Telegram бот, хэндлеры, состояния, клавиатуры
-│ ├─ database/ # Модели SQLAlchemy, инициализация БД
-│ ├─ services/ # AI клиент, уведомления, валидация
-│ └─ main.py # Точка запуска бота
-├─ admin/
-│ ├─ backend/ # FastAPI backend админки
-│ └─ frontend/ # React/Vite фронтенд админки
-├─ run.py # Менеджер процессов: бот, фронт, бэк
-├─ requirements.txt # Python зависимости
-└─ .gitignore
-
-
----
-
-## Технологии
-
-- Python 3.11+
-- Aiogram 3.x (Telegram Bot)
-- FastAPI (Backend админки)
-- React + Vite (Frontend админки)
-- PostgreSQL (База данных)
-- SQLAlchemy (ORM)
-- aiohttp (Асинхронные запросы к AI)
-- OpenRouter / Claude / Grok / Gemini (AI-анализ)
-
----
-
-## Установка
-
-1. Клонируем репозиторий:
-
-```bash
-git clone https://github.com/username/video-editor-bot.git
-cd video-editor-bot
-```
-
-python -m venv venv
-# Windows
-venv\Scripts\activate
-# Linux / Mac
-source venv/bin/activate
-Устанавливаем зависимости:
-
-bash
-Копировать код
-pip install -r requirements.txt
-Устанавливаем Node.js зависимости для фронтенда (только при работе с админкой):
-
-bash
-Копировать код
-cd admin/frontend
-npm install
-Конфигурация
-Настройки бота и базы данных находятся в app/config.py.
-
-ВАЖНО: Ключи и пароли должны храниться в .env или быть добавлены в .gitignore (не пушить реальные ключи в публичные репозитории).
-
-Пример структуры .env:
-
-ini
-Копировать код
-BOT_TOKEN=ваш_токен_бота
-ADMIN_ID=ваш_телеграм_id
-DB_USER=postgres
-DB_PASSWORD=пароль
-DB_NAME=video_editor_bot
-AI_API_KEY=ваш_ключ_openrouter
-Запуск
-Запуск всех сервисов одновременно:
-
-bash
-Копировать код
-python run.py
-Компоненты, которые запускает run.py:
-
-Telegram Bot
-
-Backend админки (FastAPI)
-
-Frontend админки (React/Vite)
-
-Для запуска только бота:
-
-bash
-Копировать код
-python -m app.main
-Для запуска только backend:
-
-bash
-Копировать код
-cd admin/backend
-uvicorn main:app --reload --port 8000
-Рабочий процесс
-Клиент отправляет заявку через Telegram.
-
-Бот валидирует данные (длительность, ссылки, бюджет).
-
-AI-анализ оценивает реалистичность, риски, стоимость и время.
-
-Администратор получает уведомление с результатами анализа.
-
-Все данные сохраняются в PostgreSQL.
-
-Админ может управлять проектами через веб-админку.
-
-Безопасность
-Никогда не храните реальные токены и пароли в публичных репозиториях.
-
-Используйте .gitignore для файлов: keys, hosts, .env, context.txt.
-
-AI API ключи должны быть приватными.
-
->>>>>>> d576a196ba7889d805e481f3f3d102b2a4151bb2
-

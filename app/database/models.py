@@ -1,9 +1,17 @@
-from sqlalchemy import Column, Integer, BigInteger, String, Text, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, BigInteger, String, Text, DateTime, ForeignKey, Boolean
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.sql import func
 from sqlalchemy.dialects.postgresql import ARRAY
+import enum
 
 Base = declarative_base()
+
+
+class UserRole(str, enum.Enum):
+    """Роли пользователей"""
+    USER = "user"      # Заказчик - может просматривать свою информацию
+    ADMIN = "admin"    # Администратор - доступ в админку
+    OWNER = "owner"    # Владелец - управление модулями и полный доступ
 
 class AIAnalysis(Base):
     __tablename__ = "ai_analyses"
@@ -18,6 +26,21 @@ class AIAnalysis(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
 
+class User(Base):
+    """Пользователи системы (для админ-панели)"""
+    __tablename__ = "users"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    username = Column(String(100), unique=True, index=True, nullable=False)
+    email = Column(String(200), unique=True, index=True)
+    hashed_password = Column(String(255), nullable=False)
+    role = Column(String(20), default=UserRole.USER.value, nullable=False)  # Используем String вместо Enum для совместимости
+    telegram_id = Column(BigInteger, unique=True, index=True, nullable=True)  # Связь с Telegram (опционально)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+
 class Client(Base):
     __tablename__ = "clients"
     
@@ -25,6 +48,7 @@ class Client(Base):
     telegram_id = Column(BigInteger, unique=True, index=True)  # <- BIGINT для больших Telegram ID
     username = Column(String(100))
     full_name = Column(String(200))
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)  # Связь с User (если зарегистрирован в админке)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
 

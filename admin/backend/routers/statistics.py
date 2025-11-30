@@ -4,7 +4,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy import func
 from app.database.connection import get_db_connection
-from app.database.models import Client, Project, AIAnalysis
+from app.database.models import Client, Project, AIAnalysis, User
+from admin.backend.auth import require_admin, get_current_active_user
 from pydantic import BaseModel
 from typing import Dict, List, Optional
 
@@ -28,7 +29,10 @@ class StatisticsResponse(BaseModel):
     top_clients: List[TopClient]
 
 @router.get("/", response_model=StatisticsResponse)
-async def get_statistics(db: AsyncSession = Depends(get_db_connection)):
+async def get_statistics(
+    db: AsyncSession = Depends(get_db_connection),
+    current_user: User = Depends(require_admin())  # Только Admin и Owner
+):
     """
     Получить общую статистику
     """
