@@ -1,15 +1,109 @@
 import React from "react";
-import { Box, VStack, Button } from "@chakra-ui/react";
+import {
+  Box,
+  VStack,
+  Button,
+  Heading,
+  IconButton,
+  Flex,
+  useColorMode,
+} from "@chakra-ui/react";
+import { SunIcon, MoonIcon } from "@chakra-ui/icons";
+import { motion, AnimatePresence } from "framer-motion";
 
-function Sidebar() {
+const MotionBox = motion(Box);
+
+function Sidebar({ activeTab, setActiveTab }) {
+  const { colorMode, toggleColorMode } = useColorMode();
+
+  const colors = {
+    light: {
+      sidebarBg: "#2b6cb0",
+    },
+    dark: {
+      sidebarBg: "#2c5282",
+    },
+  };
+
+  const currentColors = colorMode === "light" ? colors.light : colors.dark;
+
+  const menuItems = [
+    { id: "dashboard", label: "📊 Dashboard" },
+    { id: "clients", label: "👥 Clients" },
+    { id: "projects", label: "📁 Projects" },
+  ];
+
   return (
-    <Box w="200px" bg="gray.100" p={4}>
-      <VStack spacing={4} align="stretch">
-        <Button>Dashboard</Button>
-        <Button>Clients</Button>
-        <Button>Projects</Button>
+    <MotionBox
+      w="250px"
+      bg={currentColors.sidebarBg}
+      color="white"
+      p={6}
+      shadow="lg"
+      animate={{ backgroundColor: currentColors.sidebarBg }}
+      transition={{ duration: 0.5 }}
+    >
+      <Flex justify="space-between" align="center" mb={8}>
+        <Heading size="md">Admin Panel</Heading>
+        <IconButton
+          aria-label="Toggle theme"
+          onClick={toggleColorMode}
+          size="sm"
+          variant="ghost"
+          color="white"
+        >
+          <Box
+            w="24px"
+            h="24px"
+            position="relative"
+            display="flex"
+            justifyContent="center"
+            alignItems="center"
+          >
+            <AnimatePresence exitBeforeEnter initial={false}>
+              {colorMode === "light" ? (
+                <motion.div
+                  key="moon"
+                  initial={{ rotate: -90, scale: 0, opacity: 0 }}
+                  animate={{ rotate: 0, scale: 1, opacity: 1 }}
+                  exit={{ rotate: 90, scale: 0, opacity: 0 }}
+                  transition={{ duration: 0.5 }}
+                  style={{ position: "absolute" }}
+                >
+                  <MoonIcon />
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="sun"
+                  initial={{ rotate: 90, scale: 0, opacity: 0 }}
+                  animate={{ rotate: 0, scale: 1, opacity: 1 }}
+                  exit={{ rotate: -90, scale: 0, opacity: 0 }}
+                  transition={{ duration: 0.5 }}
+                  style={{ position: "absolute" }}
+                >
+                  <SunIcon />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </Box>
+        </IconButton>
+      </Flex>
+      <VStack align="start" spacing={4}>
+        {menuItems.map((item) => (
+          <Button
+            key={item.id}
+            variant={activeTab === item.id ? "solid" : "ghost"}
+            colorScheme="whiteAlpha"
+            w="100%"
+            justifyContent="flex-start"
+            _hover={{ bg: "blue.600" }}
+            onClick={() => setActiveTab(item.id)}
+          >
+            {item.label}
+          </Button>
+        ))}
       </VStack>
-    </Box>
+    </MotionBox>
   );
 }
 

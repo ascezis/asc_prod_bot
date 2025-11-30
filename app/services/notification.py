@@ -60,14 +60,29 @@ async def notify_admin(project_data: dict, user_data, project_id=None):
 📝 <b>Пожелания:</b> {project_data.get('additional_notes', 'Не указано')}
         """
         
-        await bot.send_message(
-            chat_id=config.bot.admin_id,
-            text=message_text,
-            parse_mode="HTML"
-        )
+        # Проверяем, что admin_id установлен
+        if not config.bot.admin_id or config.bot.admin_id == 0:
+            logger.error("❌ BOT_ADMIN_ID не установлен! Установите его в .env или app/config.py")
+            return
         
-        await bot.session.close()
-        logger.info(f"✅ Администратор уведомлен с AI анализом")
+        try:
+            await bot.send_message(
+                chat_id=config.bot.admin_id,
+                text=message_text,
+                parse_mode="HTML"
+            )
+            logger.info(f"✅ Администратор (ID: {config.bot.admin_id}) уведомлен с AI анализом")
+        except Exception as send_error:
+            error_msg = str(send_error)
+            if "chat not found" in error_msg.lower():
+                logger.error(f"❌ Чат с администратором не найден! Админ (ID: {config.bot.admin_id}) должен сначала написать боту /start")
+                logger.error(f"💡 Решение: Попросите администратора написать боту @SuperGenius22299Bot команду /start")
+            else:
+                raise send_error
+        finally:
+            await bot.session.close()
         
     except Exception as e:
-        logger.error(f"❌ Ошибка уведомления: {e}")
+        logger.error(f"❌ Ошибка уведомления администратору (ID: {config.bot.admin_id}): {e}")
+        import traceback
+        logger.error(f"Детали ошибки: {traceback.format_exc()}")

@@ -1,3 +1,4 @@
+import logging
 from aiogram import Router, F
 from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.context import FSMContext
@@ -15,6 +16,7 @@ from app.services.validation import (
 )
 
 router = Router()
+logger = logging.getLogger(__name__)
 
 # Обработчик отмены
 @router.message(F.text == "❌ Отмена")
@@ -119,11 +121,16 @@ async def process_service_selection(callback: CallbackQuery, state: FSMContext):
     
     await state.update_data(services=services)
     
-    # Обновляем клавиатуру
+    # Обновляем клавиатуру (только если нужно)
     from app.bot.keyboards.qualification import get_services_keyboard
-    await callback.message.edit_reply_markup(
-        reply_markup=get_services_keyboard()
-    )
+    try:
+        await callback.message.edit_reply_markup(
+            reply_markup=get_services_keyboard()
+        )
+    except Exception as e:
+        # Игнорируем ошибку "message is not modified" - это нормально
+        if "message is not modified" not in str(e).lower():
+            logger.warning(f"Ошибка обновления клавиатуры: {e}")
     await callback.answer()
 
 @router.callback_query(F.data == "services_done")

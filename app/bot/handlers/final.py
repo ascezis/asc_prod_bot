@@ -25,13 +25,13 @@ async def perform_ai_analysis(project_data: dict) -> dict:
         logger.error(f"❌ Ошибка AI анализа: {e}")
         return {"error": str(e), "fallback": True}
 
-async def notify_admin_with_ai(project_data: dict, user_data, ai_analysis: dict):
+async def notify_admin_with_ai(project_data: dict, user_data, ai_analysis: dict, project_id: int = None):
     """Отправляет уведомление с AI анализом"""
     project_data["ai_analysis"] = ai_analysis
-    await notify_admin(project_data, user_data)
+    await notify_admin(project_data, user_data, project_id)
 
 async def save_to_db(user, project_data, ai_analysis):
-    """Сохраняет клиента, проект и AI анализ в БД"""
+    """Сохраняет клиента, проект и AI анализ в БД. Возвращает project_id"""
     async with AsyncSessionLocal() as session:
         # Сначала проверяем, есть ли клиент
         result = await session.execute(select(Client).where(Client.telegram_id == user.id))
@@ -76,7 +76,8 @@ async def save_to_db(user, project_data, ai_analysis):
             session.add(analysis)
 
         await session.commit()
-        logger.info("💾 Данные успешно сохранены в БД")
+        logger.info(f"💾 Данные успешно сохранены в БД (Project ID: {project.id})")
+        return project.id
 
 @router.message(ProjectStates.waiting_for_additional_notes)
 async def process_additional_notes(message: Message, state: FSMContext):
@@ -101,18 +102,27 @@ async def process_additional_notes(message: Message, state: FSMContext):
         await state.update_data(ai_analysis=ai_analysis)
         logger.info("✅ AI анализ завершен")
 
-        # Сохраняем всё в БД
-        await save_to_db(message.from_user, data, ai_analysis)
+        # Сохраняем всё в БД и получаем project_id
+        project_id = await save_to_db(message.from_user, data, ai_analysis)
 
-        # Отправляем уведомление администратору
-        await notify_admin_with_ai(data, message.from_user, ai_analysis)
-        logger.info("✅ Администратор уведомлен с AI анализом")
+        # Отправляем уведомление администратору с project_id
+        project_data_with_id = data.copy()
+        await notify_admin_with_ai(project_data_with_id, message.from_user, ai_analysis, project_id)
+        logger.info(f"✅ Администратор уведомлен с AI анализом (Project ID: {project_id})")
 
     except Exception as e:
         logger.error(f"❌ Ошибка при AI анализе/уведомлении: {e}")
         import traceback
         logger.error(f"Детали: {traceback.format_exc()}")
-        await notify_admin(data, message.from_user)
+        
+        # Пытаемся сохранить в БД даже при ошибке AI
+        try:
+            project_id = await save_to_db(message.from_user, data, None)
+            await notify_admin(data, message.from_user, project_id)
+        except Exception as db_error:
+            logger.error(f"❌ Ошибка сохранения в БД: {db_error}")
+            await notify_admin(data, message.from_user)
+        
         logger.info("✅ Администратор уведомлен (без AI анализа)")
 
     await state.clear()

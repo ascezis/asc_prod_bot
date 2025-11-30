@@ -5,6 +5,7 @@ from aiogram.fsm.context import FSMContext
 
 from app.bot.keyboards.qualification import get_project_type_keyboard  # Абсолютный импорт
 from app.bot.states import ProjectStates
+from app.services.ai_client import AIClient
 
 router = Router()
 
