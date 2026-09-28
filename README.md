@@ -172,4 +172,4 @@ asc_prod_bot/
 
 ## Лицензия
 
-ISC
+MIT
